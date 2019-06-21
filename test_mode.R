@@ -9,8 +9,8 @@ c <- substring(strsplit(a[1,1], "x")[[1]][2], 1, 2)
 
 sink("test_mode.v")
 
-cat("/* for top calling")
-
+#cat("/*")
+cat("//------------------------------------ for top calling---------")
 cat("  
   test_mode U_test_mode (
   //---------------generated with register table by R Language-----------------
@@ -49,7 +49,7 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
     #    if(a[y,x] == 'Reserved'){next;}
     aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
     aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
-    cat("  ,.", aas,"(",a[y,x] ,")\n" , sep="")
+    cat("  ,.", aas,"(/*",a[y,x] ,"*/)\n" , sep="")
   }
 }
 cat("\n")
@@ -61,20 +61,23 @@ for(y in c(1:dim(b)[1])){
     if(b[y,x] == ""){next;}
     bbs <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
     bbs <- gsub('\\]', replacement = '', bbs, perl=TRUE)
-    cat("  ,.", bbs,"(", b[y,x] ,")\n" , sep="")
+    cat("  ,.", bbs,"(/*", b[y,x] ,"*/)\n" , sep="")
   }
 }
 cat(");") 
 
-cat("*/")
+#cat("*/")
 
 
 cat("
-//---------------generated with register table by R Language-----------------
+
+`timescale 1ns/1ps
 module test_mode #(
      parameter pTH   = 1.00
 )
-(    input  wire            iTEST_EN
+(    
+//---------------generated with register table by R Language-----------------
+     input  wire            iTEST_EN
     ,input  wire            RSTn
     ,input  wire            srlat_clk1
 //i2c
@@ -85,26 +88,69 @@ module test_mode #(
 //scan
     ,output wire            oREG_ATPG_ENB
 ")
-
-
+#---------------------------------------------------------------
+cccc <-1
+sdf <- matrix(1:3000, nrow = 300, ncol = 10)
 cat("\n")
 for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
-    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
-    cat("  ,input  wire   in_", a[y,x],"\n" , sep="")
+    cnt <- 0
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+      for(ee in c(3:10)){
+        if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
+          cnt <- cnt+1
+          sdf[ff,ee] <- strsplit(a[y,x], "\\[")[[1]][1]
+        }
+      }
+    }
+    if(cnt>=2){
+      sdf[cccc,1] <- paste0("  ,input  wire [",cnt-1,":0]  in_", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+    }else{
+      sdf[cccc,1] <- paste0("  ,input  wire        in_", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+    }
+#    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+#    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
+#    cat("  ,input  wire   in_", a[y,x],"\n" , sep="")
+    cccc <- cccc+1
   }
 }
+asdf <- sdf[!duplicated(sdf[,1]),]
+cat(asdf[grepl("input",asdf[,1]),1])
+
+#------------------------------------------------
+cccc <-1
+sdf <- matrix(1:3000, nrow = 300, ncol = 10)
 cat("\n")
 for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
-    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
-    cat("  ,output  wire   ", a[y,x],"\n" , sep="")
+    cnt <- 0
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+      for(ee in c(3:10)){
+        if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
+          cnt <- cnt+1
+          sdf[ff,ee] <- strsplit(a[y,x], "\\[")[[1]][1]
+        }
+      }
+    }
+    if(cnt>=2){
+      sdf[cccc,1] <- paste0("  ,output  wire [",cnt-1,":0]  ", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+    }else{
+      sdf[cccc,1] <- paste0("  ,output  wire        ", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+    }    
+#    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+#    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
+#    cat("  ,output  wire   ", a[y,x],"\n" , sep="")
+    cccc <- cccc+1
   }
 }
+asdf <- sdf[!duplicated(sdf[,1]),]
+cat(asdf[grepl("output",asdf[,1]),1])
+
+#----------------------------------------------------------------------
+cccc <-1
+sdf <- matrix(1:3000, nrow = 300, ncol = 10)
 cat("\n")
 cat("//--------D2A / APR ----------------\n")
 #(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85)){
@@ -112,16 +158,36 @@ for(y in c(1:dim(b)[1])){
   if(y%%2 == 0){next}
   for(x in c(3:10)){
     if(b[y,x] == ""){next;}
-    b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
-    b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
-    cat("  ,output  reg   ", b[y,x],"\n" , sep="")
+    
+    cnt <- 0
+    for(ff in c(1:dim(b)[1])){
+      if(ff%%2 == 0){next}
+      for(ee in c(3:10)){
+        if(b[ff,ee] == ""){next;}
+        if (strsplit(b[y,x], "\\[")[[1]][1] == strsplit(b[ff,ee], "\\[")[[1]][1] ){
+          cnt <- cnt+1
+          sdf[ff,ee] <- strsplit(b[y,x], "\\[")[[1]][1]
+        }
+      }
+    }
+    #b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
+    #b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
+    #cat("  ,output  reg   ", b[y,x],"\n" , sep="")
+    if(cnt>=2){
+      sdf[cccc,1] <- paste0("  ,output  wire [",cnt-1,":0]  o_", strsplit(b[y,x], "\\[")[[1]][1],"\n" , sep="")
+    }else{
+      sdf[cccc,1] <- paste0("  ,output  wire        o_", strsplit(b[y,x], "\\[")[[1]][1],"\n" , sep="")
+    }    
+    cccc <- cccc+1
   }
 }
-
+asdf <- sdf[!duplicated(sdf[,1]),]
+cat(asdf[grepl("output",asdf[,1]),1])
 cat(");")    
+#--------------------------------------------------------
 cat("    
-    wire [pDW-1:0] reg_id;
-    wire [pDW-1:0] reg_data_in;
+    wire [7:0] reg_id;
+    wire [7:0] reg_data_in;
     wire [7:0] reg_data_out;
     i2c U_i2c(
      .rstb          (RSTn)
@@ -153,9 +219,15 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
     cat("  reg   i_", a[y,x],";\n" , sep="")
   }
 }
-
-
-
+for(y in c(1:dim(b)[1])){
+  if(y%%2 == 0){next}
+  for(x in c(3:10)){
+    if(b[y,x] == ""){next;}
+    b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
+    b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
+    cat("  reg   ", b[y,x],";\n" , sep="")
+  }
+}
 cat("// WRITE ID SETTING
     // -----------------------------------------------------------------------------------------------------------
     assign srlat_clk1_inv = ~srlat_clk1;
@@ -220,9 +292,9 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
 
     cat("
     always @(posedge reg_rd_wrb or negedge RSTn) begin
-    if (!RSTn)                ",a[y,x]," <= #(pTH) 1'b0;
-      else if (R",c,"H_wr_en)    ",a[y,x]," <= #(pTH) reg_data_in[",10-x,"];
-      else                    ",a[y,x]," <= #(pTH) ",a[y,x],";
+    if (!RSTn)                reg_",a[y,x]," <= #(pTH) 1'b0;
+      else if (R",c,"H_wr_en)    reg_",a[y,x]," <= #(pTH) reg_data_in[",10-x,"];
+      else                    reg_",a[y,x]," <= #(pTH) ",a[y,x],";
     end", sep="")
 
   }
@@ -237,12 +309,19 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
 #    if(a[y,x] == 'Reserved'){next;}
     a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
     a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
-    
-    cat("    
-    always @(posedge srlat_clk1_inv or negedge RSTn) begin
-        if (!RSTn)              i_",a[y,x]," <= #(pTH) 1'b0;
-        else                    i_",a[y,x]," <= #(pTH) in_",a[y,x],";
-    end", sep="")
+    if(grepl('CSEL',a[y,x]) || grepl('DSCRST',a[y,x]) || grepl('DSCEN',a[y,x]) || grepl("PACMOD",a[y,x]) ){
+      cat("    
+      //always @(posedge srlat_clk1_inv or negedge RSTn) begin
+      //    if (!RSTn)              i_",a[y,x]," <= #(pTH) 1'b0;
+      //    else                    i_",a[y,x]," <= #(pTH) in_",a[y,x],";
+      //end", sep="")
+    }else{
+      cat("    
+      always @(posedge srlat_clk1_inv or negedge RSTn) begin
+          if (!RSTn)              i_",a[y,x]," <= #(pTH) 1'b0;
+          else                    i_",a[y,x]," <= #(pTH) in_",a[y,x],";
+      end", sep="")
+    }
   }
 }
 
@@ -255,7 +334,7 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
     a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
     if(grepl('CSEL',a[y,x]) || grepl('DSCRST',a[y,x]) || grepl('DSCEN',a[y,x]) || grepl("PACMOD",a[y,x]) ){
       cat("
-      assign ",a[y,x]," = /*conf_pass_en ? reg_",a[y,x]," :*/ i_",a[y,x],";", sep="")
+      assign ",a[y,x]," = conf_pass_en ? reg_",a[y,x]," : in_",a[y,x],";", sep="")
     }else{
       cat("
       assign ",a[y,x]," = conf_pass_en ? reg_",a[y,x]," : i_",a[y,x],";", sep="")
