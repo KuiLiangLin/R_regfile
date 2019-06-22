@@ -7,13 +7,13 @@ b <- t(t(read.csv("D:/test_2.txt", sep="\t")))
 c <- substring(strsplit(a[1,1], "x")[[1]][2], 1, 2)
 
 
-sink("test_mode.v")
+sink("reg_file.v")
 
-#cat("/*")
-cat("//------------------------------------ for top calling---------")
+cat("/*")
+cat("//------------------------------------ For top calling---------")
 cat("  
-  test_mode U_test_mode (
-  //---------------generated with register table by R Language-----------------
+  reg_file U_reg_file (
+  //---------------ALL were generated with register table by R Language-----------------
      .iTEST_EN  ( DI_APR_TEST_EN    )
     ,.RSTn      ( rstn              )
     ,.srlat_clk1( w_srlat_clk1      )
@@ -26,32 +26,106 @@ cat("
     ,.oREG_ATPG_ENB()
 ")
 
+#cat("\n")
+#cat("  //----------------conf in \n")
+#for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+#  for(x in c(3:10)){
+#    #    if(a[y,x] == 'Reserved'){next;}
+#    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+#    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
+#    aass<- gsub('\\[', replacement = '\\_int\\[', a[y,x], perl=TRUE)
+#    if(grepl("\\[",a[y,x])){
+#      aass<- gsub('\\[', replacement = '\\_int\\[', a[y,x], perl=TRUE)
+#    } else {
+#      aass<- paste0(a[y,x],"_int")
+#    }
+#    cat("  ,.in_", aas,"(",aass ,")\n" , sep="")
+#  }
+#}
+cccc <-1
+sdf <- matrix(1:3000, nrow = 300, ncol = 10)
 cat("\n")
-cat("  //----------------conf in \n")
 for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   for(x in c(3:10)){
     #    if(a[y,x] == 'Reserved'){next;}
-    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
-    aass<- gsub('\\[', replacement = '\\_int\\[', a[y,x], perl=TRUE)
-    if(grepl("\\[",a[y,x])){
-      aass<- gsub('\\[', replacement = '\\_int\\[', a[y,x], perl=TRUE)
-    } else {
-      aass<- paste0(a[y,x],"_int")
+    cnt <- 0
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+      for(ee in c(3:10)){
+        if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
+          cnt <- cnt+1
+          sdf[ff,ee] <- strsplit(a[y,x], "\\[")[[1]][1]
+        }
+      }
     }
-    cat("  ,.in_", aas,"(",aass ,")\n" , sep="")
+    sss <-  strsplit(a[y,x], "\\[")[[1]][1]
+    if(cnt>=2){
+      sdf[cccc,1] <- paste0("  ,.in_",sss,"(",sss,"_int[",cnt-1,":0])\n" , sep="")
+    }else{
+      sdf[cccc,1] <- paste0("  ,.in_",sss,"(",sss,"_int)\n" , sep="")
+    }
+    cccc <- cccc+1
   }
 }
+asdf <- sdf[!duplicated(sdf[,1]),]
+cat(asdf[grepl(",.in",asdf[,1]),1])
+
+
+# cat("\n")
+# cat("  //----------------conf out\n")
+# for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+#   for(x in c(3:10)){
+#     #    if(a[y,x] == 'Reserved'){next;}
+#     aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+#     aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
+#     cat("  ,.", aas,"(/*",a[y,x] ,"*/)\n" , sep="")
+#   }
+# }
+
+cccc <-1
+sdf <- matrix(1:3000, nrow = 300, ncol = 10)
 cat("\n")
-cat("  //----------------conf out\n")
 for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   for(x in c(3:10)){
     #    if(a[y,x] == 'Reserved'){next;}
-    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
-    cat("  ,.", aas,"(/*",a[y,x] ,"*/)\n" , sep="")
+    cnt <- 0
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+      for(ee in c(3:10)){
+        if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
+          cnt <- cnt+1
+          sdf[ff,ee] <- strsplit(a[y,x], "\\[")[[1]][1]
+        }
+      }
+    }
+    sss <-  strsplit(a[y,x], "\\[")[[1]][1]
+    if(cnt>=2){
+      sdf[cccc,1] <- paste0("  ,.",sss,"(",sss,"[",cnt-1,":0])\n" , sep="")
+    }else{
+      sdf[cccc,1] <- paste0("  ,.",sss,"(",sss,")\n" , sep="")
+    }
+    cccc <- cccc+1
   }
 }
+asdf <- sdf[!duplicated(sdf[,1]),]
+cat(asdf[grepl(",.",asdf[,1]),1])
+
+
+# cat("\n")
+# cat("//--------D2A / APR ----------------\n")
+# #(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85)){
+# for(y in c(1:dim(b)[1])){
+#   if(y%%2 == 0){next}
+#   for(x in c(3:10)){
+#     if(b[y,x] == ""){next;}
+#     bbs <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
+#     bbs <- gsub('\\]', replacement = '', bbs, perl=TRUE)
+#     cat("  ,.", bbs,"(/*", b[y,x] ,"*/)\n" , sep="")
+#   }
+# }
+# cat(");") 
+# 
+
+cccc <-1
+sdf <- matrix(1:3000, nrow = 300, ncol = 10)
 cat("\n")
 cat("//--------D2A / APR ----------------\n")
 #(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85)){
@@ -59,24 +133,42 @@ for(y in c(1:dim(b)[1])){
   if(y%%2 == 0){next}
   for(x in c(3:10)){
     if(b[y,x] == ""){next;}
-    bbs <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
-    bbs <- gsub('\\]', replacement = '', bbs, perl=TRUE)
-    cat("  ,.", bbs,"(/*", b[y,x] ,"*/)\n" , sep="")
+    
+    cnt <- 0
+    for(ff in c(1:dim(b)[1])){
+      if(ff%%2 == 0){next}
+      for(ee in c(3:10)){
+        if(b[ff,ee] == ""){next;}
+        if (strsplit(b[y,x], "\\[")[[1]][1] == strsplit(b[ff,ee], "\\[")[[1]][1] ){
+          cnt <- cnt+1
+          sdf[ff,ee] <- strsplit(b[y,x], "\\[")[[1]][1]
+        }
+      }
+    }
+    sss <- strsplit(b[y,x], "\\[")[[1]][1]
+    if(cnt>=2){
+      sdf[cccc,1] <- paste0("  ,.",sss,"(",sss,"[",cnt-1,":0])\n" , sep="")
+    }else{
+      sdf[cccc,1] <- paste0("  ,.",sss,"(",sss,")\n" , sep="")
+    }    
+    cccc <- cccc+1
   }
 }
-cat(");") 
+asdf <- sdf[!duplicated(sdf[,1]),]
+cat(asdf[grepl(",.",asdf[,1]),1])
+cat(");")    
 
-#cat("*/")
+cat("*/")
 
 
 cat("
 
 `timescale 1ns/1ps
-module test_mode #(
+module reg_file #(
      parameter pTH   = 1.00
 )
 (    
-//---------------generated with register table by R Language-----------------
+//---------------ALL were generated with register table by R Language-----------------
      input  wire            iTEST_EN
     ,input  wire            RSTn
     ,input  wire            srlat_clk1
@@ -104,10 +196,11 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
         }
       }
     }
+    sss <-  strsplit(a[y,x], "\\[")[[1]][1]
     if(cnt>=2){
-      sdf[cccc,1] <- paste0("  ,input  wire [",cnt-1,":0]  in_", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+      sdf[cccc,1] <- paste0("  ,input  wire [",cnt-1,":0]  in_",sss,"\n" , sep="")
     }else{
-      sdf[cccc,1] <- paste0("  ,input  wire        in_", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+      sdf[cccc,1] <- paste0("  ,input  wire        in_",sss,"\n" , sep="")
     }
 #    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
 #    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
@@ -134,10 +227,11 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
         }
       }
     }
+    sss <-  strsplit(a[y,x], "\\[")[[1]][1]
     if(cnt>=2){
-      sdf[cccc,1] <- paste0("  ,output  wire [",cnt-1,":0]  ", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+      sdf[cccc,1] <- paste0("  ,output  wire [",cnt-1,":0]  ",sss,"\n" , sep="")
     }else{
-      sdf[cccc,1] <- paste0("  ,output  wire        ", strsplit(a[y,x], "\\[")[[1]][1],"\n" , sep="")
+      sdf[cccc,1] <- paste0("  ,output  wire        ",sss,"\n" , sep="")
     }    
 #    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
 #    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
@@ -173,10 +267,11 @@ for(y in c(1:dim(b)[1])){
     #b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
     #b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
     #cat("  ,output  reg   ", b[y,x],"\n" , sep="")
+    sss <-  strsplit(b[y,x], "\\[")[[1]][1]
     if(cnt>=2){
-      sdf[cccc,1] <- paste0("  ,output  wire [",cnt-1,":0]  o_", strsplit(b[y,x], "\\[")[[1]][1],"\n" , sep="")
+      sdf[cccc,1] <- paste0("  ,output  reg [",cnt-1,":0]  ",sss,"\n" , sep="")
     }else{
-      sdf[cccc,1] <- paste0("  ,output  wire        o_", strsplit(b[y,x], "\\[")[[1]][1],"\n" , sep="")
+      sdf[cccc,1] <- paste0("  ,output  reg        ",sss,"\n" , sep="")
     }    
     cccc <- cccc+1
   }
@@ -205,34 +300,34 @@ cat("\n")
 for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
-    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
-    cat("  reg   reg_", a[y,x],";\n" , sep="")
+    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
+    cat("  reg   reg_", aas,";\n" , sep="")
   }
 }
 cat("\n")
 for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
-    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
-    cat("  reg   i_", a[y,x],";\n" , sep="")
+    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
+    cat("  reg   i_", aas,";\n" , sep="")
   }
 }
-for(y in c(1:dim(b)[1])){
-  if(y%%2 == 0){next}
-  for(x in c(3:10)){
-    if(b[y,x] == ""){next;}
-    b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
-    b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
-    cat("  reg   ", b[y,x],";\n" , sep="")
-  }
-}
+# for(y in c(1:dim(b)[1])){
+#   if(y%%2 == 0){next}
+#   for(x in c(3:10)){
+#     if(b[y,x] == ""){next;}
+#     b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
+#     b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
+#     cat("  reg   ", b[y,x],";\n" , sep="")
+#   }
+# }
 cat("// WRITE ID SETTING
     // -----------------------------------------------------------------------------------------------------------
     assign srlat_clk1_inv = ~srlat_clk1;
     reg[3:0] conf_pass;
-    wire conf_pass_en = (conf_pass == 4'hf); 
+    wire conf_pass_en = (conf_pass == 4'hA); 
 	\n")
 
 
@@ -287,14 +382,14 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   cat("\n    //----R",c,"H_wr_en----", sep="")
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
-    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
+    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
 
     cat("
     always @(posedge reg_rd_wrb or negedge RSTn) begin
-    if (!RSTn)                reg_",a[y,x]," <= #(pTH) 1'b0;
-      else if (R",c,"H_wr_en)    reg_",a[y,x]," <= #(pTH) reg_data_in[",10-x,"];
-      else                    reg_",a[y,x]," <= #(pTH) ",a[y,x],";
+    if (!RSTn)                reg_",aas," <= #(pTH) 1'b0;
+      else if (R",c,"H_wr_en)    reg_",aas," <= #(pTH) reg_data_in[",10-x,"];
+      else                    reg_",aas," <= #(pTH) ",aas,";
     end", sep="")
 
   }
@@ -307,19 +402,19 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   cat("\n    //----R",c,"H_wr_en----", sep="")
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
-    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
+    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
     if(grepl('CSEL',a[y,x]) || grepl('DSCRST',a[y,x]) || grepl('DSCEN',a[y,x]) || grepl("PACMOD",a[y,x]) ){
       cat("    
       //always @(posedge srlat_clk1_inv or negedge RSTn) begin
-      //    if (!RSTn)              i_",a[y,x]," <= #(pTH) 1'b0;
-      //    else                    i_",a[y,x]," <= #(pTH) in_",a[y,x],";
+      //    if (!RSTn)              i_",aas," <= #(pTH) 1'b0;
+      //    else                    i_",aas," <= #(pTH) in_",a[y,x],";
       //end", sep="")
     }else{
       cat("    
       always @(posedge srlat_clk1_inv or negedge RSTn) begin
-          if (!RSTn)              i_",a[y,x]," <= #(pTH) 1'b0;
-          else                    i_",a[y,x]," <= #(pTH) in_",a[y,x],";
+          if (!RSTn)              i_",aas," <= #(pTH) 1'b0;
+          else                    i_",aas," <= #(pTH) in_",a[y,x],";
       end", sep="")
     }
   }
@@ -330,14 +425,14 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   cat("\n    //----R",c,"H_wr_en----", sep="")
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
-    a[y,x] <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
-    a[y,x] <- gsub('\\]', replacement = '', a[y,x], perl=TRUE)
+    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+    aas <- gsub('\\]', replacement = '', aas, perl=TRUE)
     if(grepl('CSEL',a[y,x]) || grepl('DSCRST',a[y,x]) || grepl('DSCEN',a[y,x]) || grepl("PACMOD",a[y,x]) ){
       cat("
-      assign ",a[y,x]," = conf_pass_en ? reg_",a[y,x]," : in_",a[y,x],";", sep="")
+      assign ",a[y,x]," = conf_pass_en ? reg_",aas," : in_",a[y,x],";", sep="")
     }else{
       cat("
-      assign ",a[y,x]," = conf_pass_en ? reg_",a[y,x]," : i_",a[y,x],";", sep="")
+      assign ",a[y,x]," = conf_pass_en ? reg_",aas," : i_",aas,";", sep="")
     }
   }
 }
@@ -352,8 +447,8 @@ for(y in c(1:dim(b)[1])){
   for(x in c(3:10)){
     if(b[y,x] == ""){next;}
     if(b[y+1,x] == "READ"){cat("read only ");next;}
-    b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
-    b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
+    # b[y,x] <- gsub('\\[', replacement = '\\_', b[y,x], perl=TRUE)
+    # b[y,x] <- gsub('\\]', replacement = '', b[y,x], perl=TRUE)
     if(b[y+1,x] == ""){b[y+1,x] <- 0}
     cat("
     always @(posedge reg_rd_wrb or negedge RSTn) begin
@@ -372,10 +467,16 @@ cat("
     assign reg_data_out =")
 cat("
                           //--------------------------conf reg_rd_wrb ------------------")
+aasmtrx <- matrix(1:22, nrow = 11, ncol = 2)
 for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   c <- substring(strsplit(a[y,1], "x")[[1]][2], 1, 2)
+  for(x in c(3:10)){
+    #    if(a[y,x] == 'Reserved'){next;}
+    aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
+    aasmtrx[x,1] <- paste0("reg_",gsub('\\]', replacement = '', aas, perl=TRUE))
+  }
   cat("
-                          {8{reg_id == 8'h",c,"}} & {",a[y,3],", ",a[y,4],", ",a[y,5],", ",a[y,6],", ",a[y,7],", ",a[y,8],", ",a[y,9],", ",a[y,10],"} |", sep="")
+                          {8{reg_id == 8'h",c,"}} & {",aasmtrx[3,1],", ",aasmtrx[4,1],", ",aasmtrx[5,1],", ",aasmtrx[6,1]", ",aasmtrx[7,1],", ",aasmtrx[8,1],", ",aasmtrx[9,1],", ",aasmtrx[10,1],"} |", sep="")
 }
 cat("
                           //--------------------------register A2D APR reg_rd_wrb ------------------")
