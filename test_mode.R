@@ -1,5 +1,8 @@
-
-
+abcd <- t(t(read.csv("D:/test_3.txt", sep="\t")))
+strsplit(abcd[1], "\\_")[[1]][3]
+for(x in c(1:73)){
+  cat(abcd[x], " = Reserved_in[",x-1,"];\n", sep ="")
+}
 
 
 a <- t(t(read.csv("D:/test.txt", sep="\t")))
@@ -7,27 +10,28 @@ b <- t(t(read.csv("D:/test_2.txt", sep="\t")))
 c <- substring(strsplit(a[1,1], "x")[[1]][2], 1, 2)
 
 
+
 sink("reg_file.v")
 
-cat("/*")
+#cat("/*")
 cat("//------------------------------------ For top calling---------")
 cat("  
   reg_file U_reg_file (
   //---------------ALL were generated with register table by R Language-----------------
      .iTEST_EN  ( DI_APR_TEST_EN    )
-    ,.RSTn      ( rstn              )
-    ,.srlat_clk1( w_srlat_clk1      )
+    ,.RSTn      ( RSTn              )
+    ,.srlat_clk1( srlat_clk1      )
     //i2c
     ,.i2c_SCL   ( DI_APR_TEST_EN    )
     ,.i2c_SDI   ( DI_APR_TEST_MODE  )
     ,.i2c_SDO   ( DO_APR_TESTOUT0   )
-    ,.i2c_OEB   ()
+    ,.i2c_OEB   ( i2c_OEB )
     //scan
-    ,.oREG_ATPG_ENB()
+    ,.oREG_ATPG_ENB( oREG_ATPG_ENB )
 ")
 
-#cat("\n")
-#cat("  //----------------conf in \n")
+cat("\n")
+cat("  //----------------conf in ")
 #for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
 #  for(x in c(3:10)){
 #    #    if(a[y,x] == 'Reserved'){next;}
@@ -43,13 +47,13 @@ cat("
 #  }
 #}
 cccc <-1
-sdf <- matrix(1:3000, nrow = 300, ncol = 10)
+sdf <- matrix(1:3500, nrow = 350, ncol = 10)
 cat("\n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   for(x in c(3:10)){
     #    if(a[y,x] == 'Reserved'){next;}
     cnt <- 0
-    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
       for(ee in c(3:10)){
         if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
           cnt <- cnt+1
@@ -58,10 +62,12 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
       }
     }
     sss <-  strsplit(a[y,x], "\\[")[[1]][1]
-    if(cnt>=2){
-      sdf[cccc,1] <- paste0("  ,.in_",sss,"(",sss,"_int[",cnt-1,":0])\n" , sep="")
+    if(grepl("Reserved",sss)){
+      sdf[cccc,1] <- paste0("  ,.in_",sss,"(",sss,"_in)\n" , sep="")
+    }else if(cnt>=2){
+      sdf[cccc,1] <- paste0("  ,.in_",sss,"(",sss,"_in[",cnt-1,":0])\n" , sep="")
     }else{
-      sdf[cccc,1] <- paste0("  ,.in_",sss,"(",sss,"_int)\n" , sep="")
+      sdf[cccc,1] <- paste0("  ,.in_",sss,"(",sss,"_in)\n" , sep="")
     }
     cccc <- cccc+1
   }
@@ -70,8 +76,8 @@ asdf <- sdf[!duplicated(sdf[,1]),]
 cat(asdf[grepl(",.in",asdf[,1]),1])
 
 
-# cat("\n")
-# cat("  //----------------conf out\n")
+ cat("\n")
+ cat("  //----------------conf out")
 # for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
 #   for(x in c(3:10)){
 #     #    if(a[y,x] == 'Reserved'){next;}
@@ -82,13 +88,13 @@ cat(asdf[grepl(",.in",asdf[,1]),1])
 # }
 
 cccc <-1
-sdf <- matrix(1:3000, nrow = 300, ncol = 10)
+sdf <- matrix(1:3500, nrow = 350, ncol = 10)
 cat("\n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   for(x in c(3:10)){
     #    if(a[y,x] == 'Reserved'){next;}
     cnt <- 0
-    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
       for(ee in c(3:10)){
         if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
           cnt <- cnt+1
@@ -97,7 +103,9 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
       }
     }
     sss <-  strsplit(a[y,x], "\\[")[[1]][1]
-    if(cnt>=2){
+    if(grepl("Reserved",sss)){
+      sdf[cccc,1] <- paste0("  ,.",sss,"(",sss,")\n" , sep="")
+    }else if(cnt>=2){
       sdf[cccc,1] <- paste0("  ,.",sss,"(",sss,"[",cnt-1,":0])\n" , sep="")
     }else{
       sdf[cccc,1] <- paste0("  ,.",sss,"(",sss,")\n" , sep="")
@@ -109,8 +117,8 @@ asdf <- sdf[!duplicated(sdf[,1]),]
 cat(asdf[grepl(",.",asdf[,1]),1])
 
 
-# cat("\n")
-# cat("//--------D2A / APR ----------------\n")
+ cat("\n")
+ cat("//--------D2A / APR ----------------\n")
 # #(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85)){
 # for(y in c(1:dim(b)[1])){
 #   if(y%%2 == 0){next}
@@ -125,9 +133,7 @@ cat(asdf[grepl(",.",asdf[,1]),1])
 # 
 
 cccc <-1
-sdf <- matrix(1:3000, nrow = 300, ncol = 10)
-cat("\n")
-cat("//--------D2A / APR ----------------\n")
+sdf <- matrix(1:3500, nrow = 350, ncol = 10)
 #(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85)){
 for(y in c(1:dim(b)[1])){
   if(y%%2 == 0){next}
@@ -158,7 +164,7 @@ asdf <- sdf[!duplicated(sdf[,1]),]
 cat(asdf[grepl(",.",asdf[,1]),1])
 cat(");")    
 
-cat("*/")
+#cat("*/")
 
 
 cat("
@@ -180,15 +186,18 @@ module reg_file #(
 //scan
     ,output wire            oREG_ATPG_ENB
 ")
+
+cat("\n")
+cat("  //----------------conf in ")
 #---------------------------------------------------------------
 cccc <-1
-sdf <- matrix(1:3000, nrow = 300, ncol = 10)
+sdf <- matrix(1:3500, nrow = 350, ncol = 10)
 cat("\n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
     cnt <- 0
-    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
       for(ee in c(3:10)){
         if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
           cnt <- cnt+1
@@ -211,15 +220,18 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
 asdf <- sdf[!duplicated(sdf[,1]),]
 cat(asdf[grepl("input",asdf[,1]),1])
 
+
+cat("\n")
+cat("  //----------------conf out")
 #------------------------------------------------
 cccc <-1
-sdf <- matrix(1:3000, nrow = 300, ncol = 10)
+sdf <- matrix(1:3500, nrow = 350, ncol = 10)
 cat("\n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
     cnt <- 0
-    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+    for(ff in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
       for(ee in c(3:10)){
         if (strsplit(a[y,x], "\\[")[[1]][1] == strsplit(a[ff,ee], "\\[")[[1]][1] ){
           cnt <- cnt+1
@@ -244,7 +256,7 @@ cat(asdf[grepl("output",asdf[,1]),1])
 
 #----------------------------------------------------------------------
 cccc <-1
-sdf <- matrix(1:3000, nrow = 300, ncol = 10)
+sdf <- matrix(1:3500, nrow = 350, ncol = 10)
 cat("\n")
 cat("//--------D2A / APR ----------------\n")
 #(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,81,83,85)){
@@ -269,7 +281,11 @@ for(y in c(1:dim(b)[1])){
     #cat("  ,output  reg   ", b[y,x],"\n" , sep="")
     sss <-  strsplit(b[y,x], "\\[")[[1]][1]
     if(cnt>=2){
-      sdf[cccc,1] <- paste0("  ,output  reg [",cnt-1,":0]  ",sss,"\n" , sep="")
+      if(grepl("reg_ts_data",sss) || grepl("reg_ts_out",sss) || grepl("OFFSETCAL_L",sss)){
+        sdf[cccc,1] <- paste0("  ,input  wire [",cnt-1,":0]  ",sss,"\n" , sep="")
+      }else{
+        sdf[cccc,1] <- paste0("  ,output  reg [",cnt-1,":0]  ",sss,"\n" , sep="")
+      }
     }else{
       sdf[cccc,1] <- paste0("  ,output  reg        ",sss,"\n" , sep="")
     }    
@@ -277,7 +293,7 @@ for(y in c(1:dim(b)[1])){
   }
 }
 asdf <- sdf[!duplicated(sdf[,1]),]
-cat(asdf[grepl("output",asdf[,1]),1])
+cat(asdf[( grepl(",",asdf[,1])),1])
 cat(");")    
 #--------------------------------------------------------
 cat("    
@@ -297,7 +313,7 @@ cat("
     ,.reg_data_in   (reg_data_in)  //in to test mode  
 );\n")
 cat("\n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
     aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
@@ -306,7 +322,7 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   }
 }
 cat("\n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   for(x in c(3:10)){
 #    if(a[y,x] == 'Reserved'){next;}
     aas <- gsub('\\[', replacement = '\\_', a[y,x], perl=TRUE)
@@ -326,13 +342,16 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
 cat("// WRITE ID SETTING
     // -----------------------------------------------------------------------------------------------------------
     assign srlat_clk1_inv = ~srlat_clk1;
-    reg[3:0] conf_pass;
+//    reg[3:0] conf_pass;
+//    reg[7:0] Scan_mode;
     wire conf_pass_en = (conf_pass == 4'hA); 
+    
+    assign oREG_ATPG_ENB = iTEST_EN & Scan_mode == 8'H5A ;\n
 	\n")
 
 
 
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   c <- substring(strsplit(a[y,1], "x")[[1]][2], 1, 2)
     cat("  wire R",c,"H_wr_en = (reg_id == 8'h",c,") & conf_pass_en;\n" , sep="")
 }
@@ -344,15 +363,15 @@ for(y in c(1:dim(b)[1])){
   cat("  wire R",c,"H_wr_en = (reg_id == 8'h",c,");\n" , sep="")
 }
 
-cat("
-    assign oREG_ATPG_ENB = iTEST_EN & (Scan_mode_0 == 1'd1)
-                                    & (Scan_mode_1 == 1'd0)
-                                    & (Scan_mode_2 == 1'd1)
-                                    & (Scan_mode_3 == 1'd0)
-                                    & (Scan_mode_4 == 1'd0)
-                                    & (Scan_mode_5 == 1'd1)
-                                    & (Scan_mode_6 == 1'd0)
-                                    & (Scan_mode_7 == 1'd1);\n")
+# cat("
+#     assign oREG_ATPG_ENB = iTEST_EN & (Scan_mode_0 == 1'd1)
+#                                     & (Scan_mode_1 == 1'd0)
+#                                     & (Scan_mode_2 == 1'd1)
+#                                     & (Scan_mode_3 == 1'd0)
+#                                     & (Scan_mode_4 == 1'd0)
+#                                     & (Scan_mode_5 == 1'd1)
+#                                     & (Scan_mode_6 == 1'd0)
+#                                     & (Scan_mode_7 == 1'd1);\n")
 
 #cat("   
 #    wire RDDH_wr_en = (reg_id == 8'hDD) ;
@@ -377,7 +396,7 @@ cat("
 #")
 
 cat("//--------------------------conf reg_rd_wrb ------------------\n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   c <- substring(strsplit(a[y,1], "x")[[1]][2], 1, 2)
   cat("\n    //----R",c,"H_wr_en----", sep="")
   for(x in c(3:10)){
@@ -389,7 +408,7 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
     always @(posedge reg_rd_wrb or negedge RSTn) begin
     if (!RSTn)                reg_",aas," <= #(pTH) 1'b0;
       else if (R",c,"H_wr_en)    reg_",aas," <= #(pTH) reg_data_in[",10-x,"];
-      else                    reg_",aas," <= #(pTH) ",aas,";
+      else                    reg_",aas," <= #(pTH) reg_",aas,";
     end", sep="")
 
   }
@@ -397,7 +416,7 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
 }
 
 cat("\n//--------------------------conf 2 srlat_clk_inv ------------------ \n")
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   c <- substring(strsplit(a[y,1], "x")[[1]][2], 1, 2)
   cat("\n    //----R",c,"H_wr_en----", sep="")
   for(x in c(3:10)){
@@ -420,7 +439,7 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
   }
 }
 
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   c <- substring(strsplit(a[y,1], "x")[[1]][2], 1, 2)
   cat("\n    //----R",c,"H_wr_en----", sep="")
   for(x in c(3:10)){
@@ -468,7 +487,7 @@ cat("
 cat("
                           //--------------------------conf reg_rd_wrb ------------------")
 aasmtrx <- matrix(1:22, nrow = 11, ncol = 2)
-for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
+for(y in c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29)){
   c <- substring(strsplit(a[y,1], "x")[[1]][2], 1, 2)
   for(x in c(3:10)){
     #    if(a[y,x] == 'Reserved'){next;}
@@ -476,7 +495,7 @@ for(y in c(1,3,5,7,9,11,13,15,17,19,21,23)){
     aasmtrx[x,1] <- paste0("reg_",gsub('\\]', replacement = '', aas, perl=TRUE))
   }
   cat("
-                          {8{reg_id == 8'h",c,"}} & {",aasmtrx[3,1],", ",aasmtrx[4,1],", ",aasmtrx[5,1],", ",aasmtrx[6,1]", ",aasmtrx[7,1],", ",aasmtrx[8,1],", ",aasmtrx[9,1],", ",aasmtrx[10,1],"} |", sep="")
+                          {8{reg_id == 8'h",c,"}} & {",aasmtrx[3,1],", ",aasmtrx[4,1],", ",aasmtrx[5,1],", ",aasmtrx[6,1],", ",aasmtrx[7,1],", ",aasmtrx[8,1],", ",aasmtrx[9,1],", ",aasmtrx[10,1],"} |", sep="")
 }
 cat("
                           //--------------------------register A2D APR reg_rd_wrb ------------------")
